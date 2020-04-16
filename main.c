@@ -64,16 +64,30 @@ int main(void)
     usb_start();
     //starts timer 12
     timer12_start();
+
+    //start the spi_thread
+    spi_comm_start();
+
     //inits the motors
     motors_init();
 
+    //test
+    for(int i=0; i<4; i++) {
+		//clear_leds();
+		set_rgb_led(i, 0, 1, 0);
+	}
 
-    // test
-    	set_front_led(1);
-    	chThdSleepMilliseconds(1000);
-    	set_front_led(0);
-    	chThdSleepMilliseconds(1000);
-    	set_front_led(1);
+    chThdSleepMilliseconds(1000);
+    clear_leds();
+    chThdSleepMilliseconds(1000);
+    set_rgb_led(LED8,1,0,0);
+    chThdSleepMilliseconds(1000);
+    clear_leds();
+    chThdSleepMilliseconds(1000);
+    set_rgb_led(LED2,1,0,0);
+    chThdSleepMilliseconds(1000);
+    clear_leds();
+
 
 
     //temp tab used to store values in complex_float format

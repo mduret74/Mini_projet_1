@@ -10,6 +10,8 @@
 #include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
+#include <leds.h>
+
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
@@ -26,6 +28,22 @@ static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];*/
 
 #define MIN_VALUE_THRESHOLD	10000 
+
+
+//NOTE : we define here the string frequency to aim for
+//       WARNING : (the frequencies corresponding to the index are calculated with the resolution obtained with a buffer size of 4096 )
+
+#define	MI_LOW		21	//81.9 Hz
+#define LA			28	//109.2 Hz
+#define RE			38	//148.2 Hz
+#define SOL			50	//195 Hz
+#define SI			63	//245.7 Hz
+#define MI_HIGH		85	//331.5 Hz
+
+//NOTE : we define here the frequency threshold for each string
+
+#define MI_LOW_MIN		(MI_LOW - 1)
+#define MI_LOW_MAX		(MI_LOW + 1)
 
 #define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
 #define FREQ_FORWARD	16	//250Hz
@@ -47,7 +65,46 @@ static float micBack_output[FFT_SIZE];*/
 *	Simple function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
-void sound_remote(float* data){
+
+void tuner(float* data)
+{
+	float max_norm = MIN_VALUE_THRESHOLD;
+	int16_t max_norm_index = -1;	// correspond à la fréquence jouée
+
+	//search for the highest peak
+	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
+		if(data[i] > max_norm){
+			max_norm = data[i];
+			max_norm_index = i;
+		}
+	}
+
+	//turn off all the leds
+	//clear_leds();
+
+	// premier test avec la corde mi grave
+
+	if (max_norm_index < MI_LOW_MIN ){
+		clear_leds();
+		set_rgb_led(LED8,1,0,0);
+
+	}
+
+	else if (max_norm_index > MI_LOW_MAX){
+		clear_leds();
+		set_rgb_led(LED2,1,0,0);
+	}
+
+	else if (max_norm_index <= MI_LOW_MIN && max_norm_index >= MI_LOW_MAX ){
+		for(int i=0; i<4; i++) {
+			clear_leds();
+			set_rgb_led(i, 0, 1, 0);
+		}
+	}
+
+}
+
+/*void sound_remote(float* data){
 	float max_norm = MIN_VALUE_THRESHOLD;
 	int16_t max_norm_index = -1; 
 
@@ -84,7 +141,7 @@ void sound_remote(float* data){
 		right_motor_set_speed(0);
 	}
 	
-}
+}*/
 
 /*
 *	Callback called when the demodulation of the four microphones is done.
