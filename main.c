@@ -72,7 +72,7 @@ int main(void)
     motors_init();
 
     //test
-    for(int i=0; i<4; i++) {
+   /* for(int i=0; i<4; i++) {
 		//clear_leds();
 		set_rgb_led(i, 0, 1, 0);
 	}
@@ -86,7 +86,7 @@ int main(void)
     chThdSleepMilliseconds(1000);
     set_rgb_led(LED2,1,0,0);
     chThdSleepMilliseconds(1000);
-    clear_leds();
+    clear_leds();*/
 
 
 
