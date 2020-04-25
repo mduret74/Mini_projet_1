@@ -51,19 +51,14 @@ static float micLeft_output[FFT_SIZE];
 #define MI_HIGH_MIN		MI_HIGH
 #define MI_HIGH_MAX		(MI_HIGH + 2 )
 
-#define MIN_FREQ		0	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		40	//we don't analyze after this index to not use resources for nothing
+#define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
+#define MAX_FREQ		90	//we don't analyze after this index to not use resources for nothing
 
 #define OFFSET 			5 // permet de définir l'intervalle de frequence sur lequel on travaille
 
-#define FREQ_FORWARD_L		(FREQ_FORWARD-1)
-#define FREQ_FORWARD_H		(FREQ_FORWARD+1)
-#define FREQ_LEFT_L			(FREQ_LEFT-1)
-#define FREQ_LEFT_H			(FREQ_LEFT+1)
-#define FREQ_RIGHT_L		(FREQ_RIGHT-1)
-#define FREQ_RIGHT_H		(FREQ_RIGHT+1)
-#define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
-#define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
+#define FREQ_FORWARD	MI_LOW
+#define FREQ_LEFT		LA
+#define FREQ_RIGHT		RE
 
 /*
 *	Simple function used to detect and return the highest value in a buffer
@@ -87,17 +82,17 @@ int16_t get_freq (float* data, uint8_t min_freq, uint8_t max_freq)
 
 void tune_string(int16_t freq_index, int16_t min_string, int16_t max_string)
 {
-	if (freq_index < min_string ){
+	if (freq_index < min_string ){	// fréquence trop basse
 		clear_leds();
 		set_rgb_led(LED8,1,0,0);
 	}
 
-	else if (freq_index > max_string){
+	else if (freq_index > max_string){ // fréquence trop haute
 		clear_leds();
 		set_rgb_led(LED2,1,0,0);
 	}
 
-	else if (freq_index >= min_string && freq_index <= max_string ){
+	else if (freq_index >= min_string && freq_index <= max_string ){ // fréquence juste
 		clear_leds();
 		for(int i=0; i<4; i++)
 			set_rgb_led(i, 0, 1, 0);
@@ -149,6 +144,46 @@ void tuner(float* data)
 
 }
 
+void sound_remote(float* data)
+{
+	int16_t freq_index = get_freq(data, MIN_FREQ, MAX_FREQ);
+
+		//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
+		if((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD-1)) ||
+		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))){
+			left_motor_set_speed(600);
+			right_motor_set_speed(600);
+		}
+
+		// turn left
+		else if(freq_index >= (FREQ_LEFT- 1) && freq_index <= (FREQ_LEFT + 1)){
+			left_motor_set_speed(-600);
+			right_motor_set_speed(600);
+		}
+
+		// turn right
+		else if ((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
+				(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
+			left_motor_set_speed(600);
+			right_motor_set_speed(-600);
+		}
+
+		// stop si aucune commande
+		else{
+			left_motor_set_speed(0);
+			right_motor_set_speed(0);
+
+			clear_leds();
+			for(int i=0; i<4; i++)
+				set_rgb_led(i, 0, 1, 1);
+		}
+
+		// STOP MOTEUR
+		if (get_selector() != 12){
+			left_motor_set_speed(0);
+			right_motor_set_speed(0);
+		}
+}
 
 /*
 *	Callback called when the demodulation of the four microphones is done.
@@ -219,8 +254,11 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		nb_samples = 0;
 		mustSend++;
 
-		//sound_remote(micLeft_output);
 		tuner(micLeft_output);
+
+		if (get_selector() == 12)
+			sound_remote(micLeft_output);
+
 	}
 }
 
