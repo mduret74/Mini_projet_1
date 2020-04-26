@@ -16,6 +16,7 @@
 #include <communications.h>
 #include <arm_math.h>
 #include <leds.h>
+#include <sensors/proximity.h>
 
 //uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
@@ -71,6 +72,12 @@ int main(void)
     //inits the motors
     motors_init();
 
+    //start the proximity sensors
+    proximity_start();
+    calibrate_ir();
+    messagebus_init(&bus, &bus_lock, &bus_condvar);
+
+
     //test
    /* for(int i=0; i<4; i++) {
 		//clear_leds();
@@ -87,6 +94,20 @@ int main(void)
     set_rgb_led(LED2,1,0,0);
     chThdSleepMilliseconds(1000);
     clear_leds();*/
+int a, b, c, d, e, f, g, h;
+    //Récupère les valeur des capteurs IR et donne la "distance"
+    chprintf("1e capteur:%d \n 2e capteur : %d \n 3e capteur:%d \n "
+    		"4e capteur : %d \n 5e capteur:%d \n 6e capteur : %d \n 7e capteur:%d \n 8e capteur : %d \n",
+
+			a=get_prox(0),
+			b=get_prox(1),
+			c=get_prox(2),
+			d=get_prox(3),
+			e=get_prox(4),
+			f=get_prox(5),
+			g=get_prox(6),
+			h=get_prox(7)
+			);
 
 
 
