@@ -77,12 +77,15 @@ int16_t get_freq (float* data, uint8_t min_freq, uint8_t max_freq)
 		}
 	}
 
+    chprintf((BaseSequentialStream *) &SD3,"% freq =%d \n", freq_index);
+
+
 	return freq_index;
 }
 
 void tune_string(int16_t freq_index, int16_t min_string, int16_t max_string)
 {
-	if (freq_index < min_string ){	// fréquence trop basse
+	if (freq_index < min_string  && freq_index != -1){	// fréquence trop basse
 		clear_leds();
 		set_rgb_led(LED8,1,0,0);
 	}
@@ -97,6 +100,9 @@ void tune_string(int16_t freq_index, int16_t min_string, int16_t max_string)
 		for(int i=0; i<4; i++)
 			set_rgb_led(i, 0, 1, 0);
 	}
+
+	else if (freq_index == -1)
+		clear_leds();
 }
 void tuner(float* data)
 {
@@ -108,12 +114,12 @@ void tuner(float* data)
 
 	case 1 :
 		freq_index = get_freq(data, MI_LOW-OFFSET, MI_LOW+OFFSET);
-		tune_string(freq_index, MI_LOW, MI_LOW);
+		tune_string(freq_index, MI_LOW_MIN, MI_LOW_MAX);
 		break;
 
 	case 2:
 		freq_index = get_freq(data, LA-OFFSET, LA+OFFSET);
-		tune_string(freq_index, LA, LA);
+		tune_string(freq_index, LA, LA_MAX);
 		break;
 
 	case 3 :
@@ -150,13 +156,15 @@ void sound_remote(float* data)
 
 		//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
 		if((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD-1)) ||
-		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))){
+		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1)) ||
+		   (freq_index >= (3*FREQ_FORWARD-1) && freq_index <= (3*FREQ_FORWARD+1))){
 			left_motor_set_speed(600);
 			right_motor_set_speed(600);
 		}
 
 		// turn left
-		else if(freq_index >= (FREQ_LEFT- 1) && freq_index <= (FREQ_LEFT + 1)){
+		else if((freq_index >= (FREQ_LEFT- 1) && freq_index <= (FREQ_LEFT + 1)) ||
+				(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
 			left_motor_set_speed(-600);
 			right_motor_set_speed(600);
 		}
