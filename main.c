@@ -16,7 +16,7 @@
 #include <communications.h>
 #include <arm_math.h>
 #include <leds.h>
-#include <sensors/proximity.h>
+#include <detecteur_ir.h>
 
 //uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
