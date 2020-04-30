@@ -51,14 +51,15 @@ static float micLeft_output[FFT_SIZE];
 #define MI_HIGH_MIN		MI_HIGH
 #define MI_HIGH_MAX		(MI_HIGH + 2 )
 
-#define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		90	//we don't analyze after this index to not use resources for nothing
+#define MIN_FREQ		16	//we don't analyze before this index to not use resources for nothing
+#define MAX_FREQ		55	//we don't analyze after this index to not use resources for nothing
 
 #define OFFSET 			5 // permet de définir l'intervalle de frequence sur lequel on travaille
 
 #define FREQ_FORWARD	MI_LOW
 #define FREQ_LEFT		LA
 #define FREQ_RIGHT		RE
+#define FREQ_BACKWARD	SOL
 
 /*
 *	Simple function used to detect and return the highest value in a buffer
@@ -155,15 +156,14 @@ void sound_remote(float* data)
 	int16_t freq_index = get_freq(data, MIN_FREQ, MAX_FREQ);
 
 		//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
-		if((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD-1)) ||
-		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1)) ||
-		   (freq_index >= (3*FREQ_FORWARD-1) && freq_index <= (3*FREQ_FORWARD+1))){
+		if((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
+		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))){
 			left_motor_set_speed(600);
 			right_motor_set_speed(600);
 		}
 
 		// turn left
-		else if((freq_index >= (FREQ_LEFT- 1) && freq_index <= (FREQ_LEFT + 1)) ||
+		else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||
 				(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
 			left_motor_set_speed(-600);
 			right_motor_set_speed(600);
@@ -176,6 +176,10 @@ void sound_remote(float* data)
 			right_motor_set_speed(-600);
 		}
 
+		else if (freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)){
+			left_motor_set_speed(-600);
+			right_motor_set_speed(-600);
+		}
 		// stop si aucune commande
 		else{
 			left_motor_set_speed(0);
@@ -266,6 +270,8 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		if (get_selector() == 12)
 			sound_remote(micLeft_output);
+
+
 
 	}
 }
