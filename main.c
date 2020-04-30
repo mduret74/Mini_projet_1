@@ -17,19 +17,13 @@
 #include <communications.h>
 #include <arm_math.h>
 #include <leds.h>
-#include <sensors/proximity.h>
-
-
-messagebus_t bus;
-MUTEX_DECL(bus_lock);
-CONDVAR_DECL(bus_condvar);
+#include <detecteur_ir.h>
 
 //uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
 
 //uncomment to use double buffering to send the FFT to the computer
 #define DOUBLE_BUFFERING
-
 
 static void serial_start(void)
 {
@@ -39,7 +33,6 @@ static void serial_start(void)
 	    0,
 	    0,
 	};
-
 
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
@@ -82,16 +75,7 @@ int main(void)
     motors_init();
 
     //start the proximity sensors
-
-    proximity_start();
-    messagebus_init(&bus, &bus_lock, &bus_condvar);
-    calibrate_ir();
-
-
-
-
-
-
+    detecteur_ir_init ();
 
 
 
