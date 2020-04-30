@@ -85,41 +85,6 @@ int main(void)
     calibrate_ir();
 
 
-    //test
-   /* for(int i=0; i<4; i++) {
-		//clear_leds();
-		set_rgb_led(i, 0, 1, 0);
-	}
-
-    chThdSleepMilliseconds(1000);
-    clear_leds();
-    chThdSleepMilliseconds(1000);
-    set_rgb_led(LED8,1,0,0);
-    chThdSleepMilliseconds(1000);
-    clear_leds();
-    chThdSleepMilliseconds(1000);
-    set_rgb_led(LED2,1,0,0);
-    chThdSleepMilliseconds(1000);
-    clear_leds();*/
-
-    while(1){
-		int a, b, c, d, e, f, g, h;
-		//Récupère les valeur des capteurs IR et donne la "distance"
-		chprintf("1e capteur:%d  2e capteur : %d  3e capteur:%d  "
-				"4e capteur : %d  5e capteur:%d  6e capteur : %d  7e capteur:%d  8e capteur : %d \r\n",
-
-				a=get_prox(0),
-				b=get_prox(1),
-				c=get_prox(2),
-				d=get_prox(3),
-				e=get_prox(4),
-				f=get_prox(5),
-				g=get_prox(6),
-				h=get_prox(7)
-				);
-    }
-
-
 
     //temp tab used to store values in complex_float format
     //needed bx doFFT_c
