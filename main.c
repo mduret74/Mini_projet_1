@@ -53,12 +53,6 @@ static void timer12_start(void){
 }
 
 
-//initialisation du bus pour les proximiti sensor
-messagebus_t bus;
-MUTEX_DECL(bus_lock);
-CONDVAR_DECL(bus_condvar);
-
-
 int main(void)
 {
 
@@ -80,9 +74,7 @@ int main(void)
     motors_init();
 
     //start the proximity sensors
-    proximity_start();
-    messagebus_init(&bus, &bus_lock, &bus_condvar);
-    calibrate_ir();
+    detecteur_ir_init ();
 
 
 
