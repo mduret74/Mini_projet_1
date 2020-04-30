@@ -17,31 +17,37 @@
 
 
 #define		NB_CAPTEUR		8
-#define		SEUIL			400
+#define		SEUIL			50
 
-//initialisation du bus pour les proximity sensor
-messagebus_t bus;
-MUTEX_DECL(bus_lock);
-CONDVAR_DECL(bus_condvar);
 
-void detecteur_ir_init (void)
+
+uint8_t get_detecteur_ir (void)
 {
-    proximity_start();
-    messagebus_init(&bus, &bus_lock, &bus_condvar);
-    calibrate_ir();
-}
-
-uint8_t detecteur_ir_trop_près (void)
-{
-	for (i=0; i<NB_CAPTEUR; i++)
+	for (uint8_t i=0; i<NB_CAPTEUR; i++)
 	{
 		if(get_prox(i)>SEUIL)
 			return i+1;
 
-		else return 0;
 	}
+
+	return 0;
 }
 
+
+uint8_t get_zone_detecteur_ir (void)
+{
+	uint8_t capteur = get_detecteur_ir();
+
+	if (capteur == CAPTEUR_1 || capteur == CAPTEUR_2 || capteur == CAPTEUR_7 || capteur == CAPTEUR_8)
+		return FRONT;
+
+	else if (capteur == CAPTEUR_4 || capteur == CAPTEUR_5)
+		return BACK;
+
+	else
+		return NONE;
+
+}
 
 void detecteur_ir_print(void)
 {

@@ -18,6 +18,13 @@
 #include <arm_math.h>
 #include <leds.h>
 #include <detecteur_ir.h>
+#include <sensors/proximity.h>
+
+
+//initialisation du bus pour les proximity sensor
+messagebus_t bus;
+MUTEX_DECL(bus_lock);
+CONDVAR_DECL(bus_condvar);
 
 //uncomment to send the FFTs results from the real microphones
 #define SEND_FROM_MIC
@@ -75,8 +82,9 @@ int main(void)
     motors_init();
 
     //start the proximity sensors
-    detecteur_ir_init ();
-
+    proximity_start();
+	messagebus_init(&bus, &bus_lock, &bus_condvar);
+	calibrate_ir();
 
 
     //send_tab is used to save the state of the buffer to send (double buffering)

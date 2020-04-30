@@ -12,10 +12,9 @@
 #include <arm_math.h>
 #include <leds.h>
 #include <selector.h>
+#include <detecteur_ir.h>
 
 
-//semaphore
-static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -78,7 +77,7 @@ int16_t get_freq (float* data, uint8_t min_freq, uint8_t max_freq)
 		}
 	}
 
-    chprintf((BaseSequentialStream *) &SD3,"% freq =%d \n", freq_index);
+   // chprintf((BaseSequentialStream *) &SD3,"% freq =%d \n", freq_index);
 
 
 	return freq_index;
@@ -154,47 +153,54 @@ void tuner(float* data)
 void sound_remote(float* data)
 {
 	int16_t freq_index = get_freq(data, MIN_FREQ, MAX_FREQ);
+	uint8_t capteur = get_zone_detecteur_ir ();
+	chprintf((BaseSequentialStream *) &SD3,"% capteur =%d \r\n", capteur);
 
-		//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
-		if((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
-		   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))){
-			left_motor_set_speed(600);
-			right_motor_set_speed(600);
-		}
 
-		// turn left
-		else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||
-				(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
-			left_motor_set_speed(-600);
-			right_motor_set_speed(600);
-		}
+	//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
 
-		// turn right
-		else if ((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
-				(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
-			left_motor_set_speed(600);
-			right_motor_set_speed(-600);
-		}
 
-		else if (freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)){
-			left_motor_set_speed(-600);
-			right_motor_set_speed(-600);
-		}
-		// stop si aucune commande
-		else{
-			left_motor_set_speed(0);
-			right_motor_set_speed(0);
+	 if(((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
+	   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))) && capteur != FRONT){
+		left_motor_set_speed(600);
+		right_motor_set_speed(600);
+	}
 
-			clear_leds();
-			for(int i=0; i<4; i++)
-				set_rgb_led(i, 0, 1, 1);
-		}
 
-		// STOP MOTEUR
-		if (get_selector() != 12){
-			left_motor_set_speed(0);
-			right_motor_set_speed(0);
-		}
+	// turn left
+	else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||
+			(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
+		left_motor_set_speed(-600);
+		right_motor_set_speed(600);
+	}
+
+	// turn right
+	else if ((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
+			(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
+		left_motor_set_speed(600);
+		right_motor_set_speed(-600);
+	}
+
+	//go backward
+	else if ((freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)) && capteur != BACK){
+		left_motor_set_speed(-600);
+		right_motor_set_speed(-600);
+	}
+	// stop si aucune commande
+	else{
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+
+		clear_leds();
+		for(int i=0; i<4; i++)
+			set_rgb_led(i, 0, 1, 1);
+	}
+
+	// STOP MOTEUR
+	if (get_selector() != 12){
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+	}
 }
 
 /*
@@ -217,7 +223,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	*/
 
 	static uint16_t nb_samples = 0;
-	static uint8_t mustSend = 0;
 
 	//loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4){
@@ -256,17 +261,12 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 
 
-		//sends only one FFT result over 10 for 1 mic to not flood the computer
-		//sends to UART3
-		if(mustSend > 8){
-			//signals to send the result to the computer
-			chBSemSignal(&sendToComputer_sem);
-			mustSend = 0;
-		}
+
 		nb_samples = 0;
-		mustSend++;
+
 
 		tuner(micLeft_output);
+
 
 		if (get_selector() == 12)
 			sound_remote(micLeft_output);
@@ -276,9 +276,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	}
 }
 
-void wait_send_to_computer(void){
-	chBSemWait(&sendToComputer_sem);
-}
 
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	if(name == LEFT_CMPLX_INPUT){
