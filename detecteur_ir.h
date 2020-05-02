@@ -26,8 +26,11 @@
 //y en a un qui détecte un objet proche (de 1 à 8)
 uint8_t get_detecteur_ir (void);
 
-
+// renvoie NONE, FRONT ou BACK en fonction de la position de l'obstacle par rapport aux capteurs
 uint8_t get_zone_detecteur_ir (void);
+
+// allume la led de la zone proche de l'obstacle
+void toggle_leds_collision(void);
 
 
 //fonction qui permet l'écriture de ce que renvoie les capteurs dans realterm.

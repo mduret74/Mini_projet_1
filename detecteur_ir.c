@@ -14,10 +14,10 @@
 #include <chprintf.h>
 #include <detecteur_ir.h>
 #include <sensors/proximity.h>
-
+#include <leds.h>
 
 #define		NB_CAPTEUR		8
-#define		SEUIL			50
+#define		SEUIL			100
 
 
 
@@ -47,6 +47,23 @@ uint8_t get_zone_detecteur_ir (void)
 	else
 		return NONE;
 
+}
+
+void toggle_leds_collision(void)
+{
+	if(get_zone_detecteur_ir() == FRONT){
+		clear_leds();
+		set_led(LED1,1);
+
+	}
+
+	else if (get_zone_detecteur_ir() == BACK){
+		clear_leds();
+		set_led(LED5,1);
+	}
+
+	else
+		clear_leds();
 }
 
 void detecteur_ir_print(void)

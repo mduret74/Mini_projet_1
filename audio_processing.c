@@ -156,42 +156,43 @@ void sound_remote(float* data)
 	uint8_t capteur = get_zone_detecteur_ir ();
 	chprintf((BaseSequentialStream *) &SD3,"% capteur =%d \r\n", capteur);
 
+	// gère les leds qui indiquent les obstacles
+	toggle_leds_collision();
 
 	//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
 
 
 	 if(((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
 	   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))) && capteur != FRONT){
-		left_motor_set_speed(600);
-		right_motor_set_speed(600);
+		left_motor_set_speed(400);
+		right_motor_set_speed(400);
 	}
 
 
 	// turn left
 	else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||
 			(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
-		left_motor_set_speed(-600);
-		right_motor_set_speed(600);
+		left_motor_set_speed(-400);
+		right_motor_set_speed(400);
 	}
 
 	// turn right
 	else if ((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
 			(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
-		left_motor_set_speed(600);
-		right_motor_set_speed(-600);
+		left_motor_set_speed(400);
+		right_motor_set_speed(-400);
 	}
 
 	//go backward
 	else if ((freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)) && capteur != BACK){
-		left_motor_set_speed(-600);
-		right_motor_set_speed(-600);
+		left_motor_set_speed(-400);
+		right_motor_set_speed(-400);
 	}
 	// stop si aucune commande
 	else{
 		left_motor_set_speed(0);
 		right_motor_set_speed(0);
 
-		clear_leds();
 		for(int i=0; i<4; i++)
 			set_rgb_led(i, 0, 1, 1);
 	}
@@ -268,8 +269,17 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		tuner(micLeft_output);
 
 
-		if (get_selector() == 12)
+		if (get_selector() == 12){
+			/*uint8_t test = get_zone_detecteur_ir ();
+			while (test == FRONT){
+				clear_leds();
+				set_led(LED1,1);
+			}*/
+
 			sound_remote(micLeft_output);
+
+
+		}
 
 
 
