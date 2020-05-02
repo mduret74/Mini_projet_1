@@ -1,13 +1,19 @@
+/*
+ * audio_processing.c  fichier qui provient du TP5
+ * Projet microinformatique 2020
+ * Complété et modifié par : Groupe 11 Roxane Pangaud, Matthieu Duret
+ *
+ */
+
 #include "ch.h"
 #include "hal.h"
 #include <main.h>
 #include <usbcfg.h>
-#include <chprintf.h>
+#include <chprintf.h> // TO BE DELETED
 
 #include <motors.h>
 #include <audio/microphone.h>
 #include <audio_processing.h>
-#include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
 #include <leds.h>
@@ -22,33 +28,31 @@ static float micLeft_cmplx_input[2 * FFT_SIZE];
 //Arrays containing the computed magnitude of the complex numbers
 static float micLeft_output[FFT_SIZE];
 
+//seuil d'intensité du son : permet d'être moins sensible au bruit ambiant
 #define MIN_VALUE_THRESHOLD	10000 
 
 
-//NOTE : we define here the string frequency to aim for
-//       WARNING : (the frequencies corresponding to the index are calculated with the resolution obtained with a buffer size of 4096 )
-
-#define	MI_LOW		21  	//juste cette ligne : res = 15.625	-> index 5		//21  	//81.9 Hz
+//we define here the string frequency to aim for
+#define	MI_LOW		21  //81.9 Hz
 #define LA			28	//109.2 Hz
 #define RE			38	//148.2 Hz
-#define SOL			50  //12  //50	//195 Hz
+#define SOL			50 	//195 Hz
 #define SI			63	//245.7 Hz
 #define MI_HIGH		85	//331.5 Hz
 
-//NOTE : we define here the frequency threshold for each string
-
+//we define here the frequency threshold for each string
 #define MI_LOW_MIN		(MI_LOW - 1)
 #define MI_LOW_MAX		(MI_LOW + 1)
-#define LA_MIN			(LA - 1 )
-#define LA_MAX			(LA + 1 )
-#define RE_MIN			(RE - 1 )
-#define RE_MAX			(RE + 1 )
-#define SOL_MIN			(SOL - 1 )
-#define SOL_MAX			(SOL + 1 )
+#define LA_MIN			LA
+#define LA_MAX			(LA + 1)
+#define RE_MIN			(RE - 1)
+#define RE_MAX			(RE + 1)
+#define SOL_MIN			(SOL - 1)
+#define SOL_MAX			(SOL + 1)
 #define SI_MIN			SI
-#define SI_MAX			(SI + 2 )
+#define SI_MAX			(SI + 1)
 #define MI_HIGH_MIN		MI_HIGH
-#define MI_HIGH_MAX		(MI_HIGH + 2 )
+#define MI_HIGH_MAX		(MI_HIGH + 1)
 
 #define MIN_FREQ		16	//we don't analyze before this index to not use resources for nothing
 #define MAX_FREQ		55	//we don't analyze after this index to not use resources for nothing
@@ -61,13 +65,15 @@ static float micLeft_output[FFT_SIZE];
 #define FREQ_BACKWARD	SOL
 
 /*
-*	Simple function used to detect and return the highest value in a buffer
+*	Retourne la fréquence de plus grande intensité captée par le micro dans un intervalle défini
+*	Paramètres : float* data : buffer qui contient les fréquences mesurées par le micro
+*				 uint8_t min_freq : borne inférieure de l'intervalle de fréquence sur lequel on travaille
+*				 uint8_t max_freq : borne supérieure de l'intervalle de fréquence sur lequel on travaille
 */
-
 int16_t get_freq (float* data, uint8_t min_freq, uint8_t max_freq)
 {
 	float max_norm = MIN_VALUE_THRESHOLD;
-	int16_t freq_index = -1;	// correspond à la fréquence jouée
+	int16_t freq_index = -1;	// correspond à la fréquence reçue
 
 	//search for the highest peak
 	for(uint16_t i = min_freq ; i <= max_freq ; i++){
@@ -77,12 +83,14 @@ int16_t get_freq (float* data, uint8_t min_freq, uint8_t max_freq)
 		}
 	}
 
-   // chprintf((BaseSequentialStream *) &SD3,"% freq =%d \n", freq_index);
-
-
 	return freq_index;
 }
 
+/* Indique si la fréquence mesurée se trouve dans l'intervalle désiré ou non. Donne un feedback à l'utilisateur avec les leds
+ * Paramètres : int16_t freq_index : fréquence mesurée
+ * 				int16_t min_string : borne inférieure de l'intervalle de fréquence désiré
+ * 				int16_t max_string : borne supérieure de l'intervalle de fréquence désiré
+ */
 void tune_string(int16_t freq_index, int16_t min_string, int16_t max_string)
 {
 	if (freq_index < min_string  && freq_index != -1){	// fréquence trop basse
@@ -104,9 +112,12 @@ void tune_string(int16_t freq_index, int16_t min_string, int16_t max_string)
 	else if (freq_index == -1)
 		clear_leds();
 }
+
+/* Sélectionne la corde à accorder en fonction de la position du sélecteur
+ * Paramètre : float* data :  buffer qui contient les fréquences mesurées par le micro
+ */
 void tuner(float* data)
 {
-
 	uint8_t sel_state = get_selector();
 	int16_t freq_index = -1 ;
 
@@ -119,7 +130,7 @@ void tuner(float* data)
 
 	case 2:
 		freq_index = get_freq(data, LA-OFFSET, LA+OFFSET);
-		tune_string(freq_index, LA, LA_MAX);
+		tune_string(freq_index, LA_MIN, LA_MAX);
 		break;
 
 	case 3 :
@@ -145,25 +156,24 @@ void tuner(float* data)
 	default:
 		clear_leds();
 		break;
-
 	}
-
 }
-
+/* Gère les déplacements du robots en fonction des fréquences mesurées et des éventuels obstacles
+ * Paramètres : float* data :  buffer qui contient les fréquences mesurées par le micro
+ */
 void sound_remote(float* data)
 {
 	int16_t freq_index = get_freq(data, MIN_FREQ, MAX_FREQ);
 	uint8_t capteur = get_zone_detecteur_ir ();
-	chprintf((BaseSequentialStream *) &SD3,"% capteur =%d \r\n", capteur);
 
-	// gère les leds qui indiquent les obstacles
+	//gère les leds qui indiquent les obstacles
 	toggle_leds_collision();
 
-	//go forward NOTE : on considère ici la 2e harmonique du MI_LOW qui est en général de plus grande intensité
+	//go forward NOTE : on considère également les 2e harmoniques du MI_LOW, LA et RE qui sont en général de plus grande intensité
 
 
 	 if(((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
-	   (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))) && capteur != FRONT){
+	    (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))) && capteur != FRONT){
 		left_motor_set_speed(400);
 		right_motor_set_speed(400);
 	}
@@ -177,30 +187,25 @@ void sound_remote(float* data)
 	}
 
 	// turn right
-	else if ((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
+	else if((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
 			(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
 		left_motor_set_speed(400);
 		right_motor_set_speed(-400);
 	}
 
 	//go backward
-	else if ((freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)) && capteur != BACK){
+	else if((freq_index >= (FREQ_BACKWARD - 1) && freq_index <= (FREQ_BACKWARD + 1)) && capteur != BACK){
 		left_motor_set_speed(-400);
 		right_motor_set_speed(-400);
 	}
-	// stop si aucune commande
+
+	 // stop si aucune commande
 	else{
 		left_motor_set_speed(0);
 		right_motor_set_speed(0);
 
 		for(int i=0; i<4; i++)
 			set_rgb_led(i, 0, 1, 1);
-	}
-
-	// STOP MOTEUR
-	if (get_selector() != 12){
-		left_motor_set_speed(0);
-		right_motor_set_speed(0);
 	}
 }
 
@@ -213,13 +218,14 @@ void sound_remote(float* data)
 *							so we have [micRight1, micLeft1, micBack1, micFront1, micRight2, etc...]
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
-void processAudioData(int16_t *data, uint16_t num_samples){
+void processAudioData(int16_t *data, uint16_t num_samples)
+{
 
 	/*
 	*
 	*	We get 160 samples per mic every 10ms
 	*	So we fill the samples buffers to reach
-	*	1024 samples, then we compute the FFTs.
+	*	4096 samples, then we compute the FFTs.
 	*
 	*/
 
@@ -261,42 +267,11 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		*/
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 
-
-
 		nb_samples = 0;
-
 
 		tuner(micLeft_output);
 
-
-		if (get_selector() == 12){
-			/*uint8_t test = get_zone_detecteur_ir ();
-			while (test == FRONT){
-				clear_leds();
-				set_led(LED1,1);
-			}*/
-
+		if (get_selector() == 12)
 			sound_remote(micLeft_output);
-
-
-		}
-
-
-
-	}
-}
-
-
-float* get_audio_buffer_ptr(BUFFER_NAME_t name){
-	if(name == LEFT_CMPLX_INPUT){
-		return micLeft_cmplx_input;
-	}
-
-	else if (name == LEFT_OUTPUT){
-		return micLeft_output;
-	}
-
-	else{
-		return NULL;
 	}
 }

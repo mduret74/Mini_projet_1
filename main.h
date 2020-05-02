@@ -1,3 +1,10 @@
+/*
+ * main.h fichier qui provient du TP5
+ * Projet microinformatique 2020
+ * Complété et modifié par : Groupe 11 Roxane Pangaud, Matthieu Duret
+ *
+ */
+
 #ifndef MAIN_H
 #define MAIN_H
 

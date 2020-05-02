@@ -1,8 +1,7 @@
 /*
  * detecteur_ir.h
- *
- *  Created on: 30 avr. 2020
- *      Author: Roxane
+ * 		Projet microinformatique 2020
+ *      Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
  */
 
 #ifndef DETECTEUR_IR_H_
@@ -31,11 +30,5 @@ uint8_t get_zone_detecteur_ir (void);
 
 // allume la led de la zone proche de l'obstacle
 void toggle_leds_collision(void);
-
-
-//fonction qui permet l'écriture de ce que renvoie les capteurs dans realterm.
-void detecteur_ir_print(void);
-
-
 
 #endif /* DETECTEUR_IR_H_ */

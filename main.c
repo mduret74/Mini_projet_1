@@ -1,3 +1,10 @@
+/*
+ * main.c fichier qui provient du TP5
+ * Projet microinformatique 2020
+ * Complété et modifié par : Groupe 11 Roxane Pangaud, Matthieu Duret
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,13 +15,12 @@
 #include "spi_comm.h"
 #include <usbcfg.h>
 #include <main.h>
-#include <chprintf.h>
+#include <chprintf.h> 	// TO BE DELETED
 #include <motors.h>
 #include <audio/microphone.h>
 
 #include <audio_processing.h>
 #include <fft.h>
-#include <communications.h>
 #include <arm_math.h>
 #include <leds.h>
 #include <detecteur_ir.h>
@@ -26,13 +32,8 @@ messagebus_t bus;
 MUTEX_DECL(bus_lock);
 CONDVAR_DECL(bus_condvar);
 
-//uncomment to send the FFTs results from the real microphones
-#define SEND_FROM_MIC
 
-//uncomment to use double buffering to send the FFT to the computer
-#define DOUBLE_BUFFERING
-
-static void serial_start(void)
+/*static void serial_start(void)
 {
 	static SerialConfig ser_cfg = {
 	    115200,
@@ -42,7 +43,7 @@ static void serial_start(void)
 	};
 
 	sdStart(&SD3, &ser_cfg); // UART3.
-}
+}*/
 
 static void timer12_start(void){
     //General Purpose Timer configuration   
@@ -68,7 +69,7 @@ int main(void)
     mpu_init();
 
     //starts the serial communication
-    serial_start();
+   // serial_start();
     //starts the USB communication
     usb_start();
 
@@ -85,11 +86,6 @@ int main(void)
     proximity_start();
 	messagebus_init(&bus, &bus_lock, &bus_condvar);
 	calibrate_ir();
-
-
-    //send_tab is used to save the state of the buffer to send (double buffering)
-    //to avoid modifications of the buffer while sending it
-    static float send_tab[FFT_SIZE];
 
 
     //starts the microphones processing thread.

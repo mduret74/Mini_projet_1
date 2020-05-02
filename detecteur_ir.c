@@ -1,39 +1,42 @@
 /*
  * detecteur_ir.c
+ *  	Projet microinformatique 2020
  *
- *  Created on: 30 avr. 2020
- *      Author: Roxane
+ *      Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ch.h"
 #include "hal.h"
-#include "memory_protection.h"
 #include <usbcfg.h>
-#include <chprintf.h>
+#include <chprintf.h>		// TO BE DELETED
 #include <detecteur_ir.h>
 #include <sensors/proximity.h>
 #include <leds.h>
 
 #define		NB_CAPTEUR		8
+
+// seuil de luminosité pour la détection d'obstacle
 #define		SEUIL			100
 
 
-
+/* Renvoie le numéro du capteur (entre 1 et 8) de proximité qui détecte un obstacle
+ * Renvoie 0 si aucun obstacle n'est détecté
+ */
 uint8_t get_detecteur_ir (void)
 {
-	for (uint8_t i=0; i<NB_CAPTEUR; i++)
-	{
+	for (uint8_t i=0; i<NB_CAPTEUR; i++){
 		if(get_prox(i)>SEUIL)
 			return i+1;
-
 	}
 
 	return 0;
 }
 
-
+/* Indique si l'obstacle se trouve devant ou derrière le robot (respectivement FRONT ou BACK)
+ * Renvoie NONE sinon
+ */
 uint8_t get_zone_detecteur_ir (void)
 {
 	uint8_t capteur = get_detecteur_ir();
@@ -46,15 +49,15 @@ uint8_t get_zone_detecteur_ir (void)
 
 	else
 		return NONE;
-
 }
 
+/* Allume les leds en fonction de la position de l'obstacle détecté
+ */
 void toggle_leds_collision(void)
 {
 	if(get_zone_detecteur_ir() == FRONT){
 		clear_leds();
 		set_led(LED1,1);
-
 	}
 
 	else if (get_zone_detecteur_ir() == BACK){
@@ -64,22 +67,4 @@ void toggle_leds_collision(void)
 
 	else
 		clear_leds();
-}
-
-void detecteur_ir_print(void)
-{
-	int a, b, c, d, e, f, g, h;
-			//Récupère les valeur des capteurs IR et donne la "distance"
-			chprintf("1e capteur:%d  2e capteur : %d  3e capteur:%d  "
-					"4e capteur : %d  5e capteur:%d  6e capteur : %d  7e capteur:%d  8e capteur : %d \r\n",
-
-					a=get_prox(0),
-					b=get_prox(1),
-					c=get_prox(2),
-					d=get_prox(3),
-					e=get_prox(4),
-					f=get_prox(5),
-					g=get_prox(6),
-					h=get_prox(7)
-					);
 }
