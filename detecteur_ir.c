@@ -1,8 +1,8 @@
 /*
  * detecteur_ir.c
- *  	Projet microinformatique 2020
+ * Projet microinformatique 2020
  *
- *      Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
+ * Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
  */
 #include <stdio.h>
 #include <stdlib.h>

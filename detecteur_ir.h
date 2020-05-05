@@ -1,7 +1,7 @@
 /*
  * detecteur_ir.h
- * 		Projet microinformatique 2020
- *      Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
+ * Projet microinformatique 2020
+ * Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
  */
 
 #ifndef DETECTEUR_IR_H_
