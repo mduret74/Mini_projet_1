@@ -29,7 +29,7 @@ static float micLeft_cmplx_input[2 * FFT_SIZE];
 static float micLeft_output[FFT_SIZE];
 
 //seuil d'intensité du son : permet d'être moins sensible au bruit ambiant
-#define MIN_VALUE_THRESHOLD	10000 
+#define MIN_VALUE_THRESHOLD	13000
 
 
 //we define here the string frequency to aim for
@@ -55,7 +55,7 @@ static float micLeft_output[FFT_SIZE];
 #define MI_HIGH_MAX		(MI_HIGH + 1)
 
 #define MIN_FREQ		16	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		55	//we don't analyze after this index to not use resources for nothing
+#define MAX_FREQ		53	//we don't analyze after this index to not use resources for nothing
 
 #define OFFSET 			5 // permet de définir l'intervalle de frequence sur lequel on travaille
 
@@ -169,11 +169,11 @@ void sound_remote(float* data)
 	//gère les leds qui indiquent les obstacles
 	toggle_leds_collision();
 
-	//go forward NOTE : on considère également les 2e harmoniques du MI_LOW, LA et RE qui sont en général de plus grande intensité
+	//go forward NOTE : on considère également la 2e harmonique du MI_LOW, LA et RE qui est en général de plus grande intensité
 
 
 	 if(((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
-	    (freq_index >= (2*FREQ_FORWARD-1) && freq_index <= (2*FREQ_FORWARD+1))) && capteur != FRONT){
+	    (freq_index >= (2*FREQ_FORWARD-2) && freq_index <= (2*FREQ_FORWARD+2))) && capteur != FRONT){
 		left_motor_set_speed(400);
 		right_motor_set_speed(400);
 	}
@@ -181,14 +181,13 @@ void sound_remote(float* data)
 
 	// turn left
 	else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||
-			(freq_index >= (2*FREQ_LEFT- 1) && freq_index <= (2*FREQ_LEFT + 1))){
+			(freq_index >= (2*FREQ_LEFT- 2) && freq_index <= (2*FREQ_LEFT + 2))){
 		left_motor_set_speed(-400);
 		right_motor_set_speed(400);
 	}
 
 	// turn right
-	else if((freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)) ||
-			(freq_index >= (2*FREQ_RIGHT - 1) && freq_index <= (2*FREQ_RIGHT + 1))){
+	else if(freq_index >= (FREQ_RIGHT - 1) && freq_index <= (FREQ_RIGHT + 1)){
 		left_motor_set_speed(400);
 		right_motor_set_speed(-400);
 	}
@@ -216,6 +215,7 @@ void sound_remote(float* data)
 *	params :
 *	int16_t *data			Buffer containing 4 times 160 samples. the samples are sorted by micro
 *							so we have [micRight1, micLeft1, micBack1, micFront1, micRight2, etc...]
+*							Only micLeft is used though
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
 void processAudioData(int16_t *data, uint16_t num_samples)
@@ -269,9 +269,13 @@ void processAudioData(int16_t *data, uint16_t num_samples)
 
 		nb_samples = 0;
 
+
+
 		tuner(micLeft_output);
 
 		if (get_selector() == 12)
 			sound_remote(micLeft_output);
+
+
 	}
 }
