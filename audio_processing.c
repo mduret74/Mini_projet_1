@@ -40,7 +40,7 @@ static float micLeft_output[FFT_SIZE];
 #define SI			63	//245.7 Hz
 #define MI_HIGH		85	//331.5 Hz
 
-//we define here the frequency threshold for each string
+//on définit ici les seuils de fréquences justes
 #define MI_LOW_MIN		(MI_LOW - 1)
 #define MI_LOW_MAX		(MI_LOW + 1)
 #define LA_MIN			LA
@@ -54,8 +54,8 @@ static float micLeft_output[FFT_SIZE];
 #define MI_HIGH_MIN		MI_HIGH
 #define MI_HIGH_MAX		(MI_HIGH + 1)
 
-#define MIN_FREQ		16	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		53	//we don't analyze after this index to not use resources for nothing
+#define MIN_FREQ		16	// seuil de fréquence inférieur pour le mode contôle
+#define MAX_FREQ		53	// seuil de fréquence supérieur pour le mode contôle
 
 #define OFFSET 			5 // permet de définir l'intervalle de frequence sur lequel on travaille
 
@@ -169,7 +169,7 @@ void sound_remote(float* data)
 	//gère les leds qui indiquent les obstacles
 	toggle_leds_collision();
 
-	//go forward NOTE : on considère également la 2e harmonique du MI_LOW, LA et RE qui est en général de plus grande intensité
+	//go forward NOTE : on considère également la 2e harmonique du MI_LOW qui est en général de plus grande intensité
 
 
 	 if(((freq_index >= (FREQ_FORWARD-1) && freq_index <= (FREQ_FORWARD+1)) ||
@@ -178,6 +178,7 @@ void sound_remote(float* data)
 		right_motor_set_speed(400);
 	}
 
+	//NOTE : on considère également la 2e harmonique du MI_LOW qui est en général de plus grande intensité
 
 	// turn left
 	else if((freq_index >= (FREQ_LEFT - 1) && freq_index <= (FREQ_LEFT + 1)) ||

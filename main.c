@@ -13,9 +13,7 @@
 #include "hal.h"
 #include "memory_protection.h"
 #include "spi_comm.h"
-#include <usbcfg.h>
 #include <main.h>
-#include <chprintf.h> 	// TO BE DELETED
 #include <motors.h>
 #include <audio/microphone.h>
 
@@ -32,13 +30,9 @@ CONDVAR_DECL(bus_condvar);
 
 int main(void)
 {
-
     halInit();
     chSysInit();
     mpu_init();
-
-    //starts the USB communication
-    usb_start();
 
     //start the spi_thread
     spi_comm_start();
