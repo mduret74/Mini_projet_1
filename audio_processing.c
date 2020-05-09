@@ -8,9 +8,6 @@
 #include "ch.h"
 #include "hal.h"
 #include <main.h>
-#include <usbcfg.h>
-#include <chprintf.h> // TO BE DELETED
-
 #include <motors.h>
 #include <audio/microphone.h>
 #include <audio_processing.h>
@@ -276,7 +273,6 @@ void processAudioData(int16_t *data, uint16_t num_samples)
 
 		if (get_selector() == 12)
 			sound_remote(micLeft_output);
-
 
 	}
 }

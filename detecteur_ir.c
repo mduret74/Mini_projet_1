@@ -4,13 +4,8 @@
  *
  * Authors	: Groupe 11 Roxane Pangaud, Matthieu Duret
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "ch.h"
 #include "hal.h"
-#include <usbcfg.h>
-#include <chprintf.h>		// TO BE DELETED
 #include <detecteur_ir.h>
 #include <sensors/proximity.h>
 #include <leds.h>
